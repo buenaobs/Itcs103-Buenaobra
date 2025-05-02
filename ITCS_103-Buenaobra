@@ -1,0 +1,83 @@
+from openpyxl import Workbook
+import tkinter as tk
+from tkinter import messagebox
+from openpyxl import load_workbook
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
+import os
+
+#Create file
+if not os.path.exists("scores.xlsx"):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Scores"
+    ws.append(["Name", "Score", "Result"])
+    wb.save("student_scores.xlsx")
+
+#Check Inputs
+def validate_inputs():
+    name = name_entry.get()
+    try:
+        score = int(score_entry.get().strip())
+        if not (0 <= score <= 100):
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Invalid Input!", "Score must be an integer between 0 and 100")
+        return
+
+    if name =="":
+        messagebox.showerror("Input Error", "Name should not be empty!")
+        return False
+
+    return True
+
+#Save Data
+def save_to_excel():
+    if not validate_inputs():
+        return
+
+    name = name_entry.get()
+    score = score_entry.get()
+    score_int=int(score)
+    result =  "Passed" if score_int >= 75 else "Fail"
+
+    wb = load_workbook("scores.xlsx")
+    ws = wb["Scores"]
+    ws.append([name, score, result])
+    wb.save("scores.xlsx")
+
+    messagebox.showinfo("Success", "Data saved successfully!")
+    name_entry.delete(0, tk.END)
+    score_entry.delete(0, tk.END)
+
+#Show Data
+def show_data():
+    wb = load_workbook("scores.xlsx")
+    ws = wb["Scores"]
+
+    data_window = tk.Toplevel(window)
+    data_window.geometry("300x300")
+    data_window.title("Stored Student Data")
+
+    for i, row in enumerate(ws.iter_rows(values_only=True)):
+        for j, value in enumerate(row):
+            label = tk.Label(data_window, text=value, borderwidth=1, relief="solid", padx=6, pady=3)
+            label.grid(row=i, column=j)
+
+#Create Widgets
+window = tk.Tk()
+window.title("User Data Form")
+
+tk.Label(window, text="Name").grid(row=0, column=0, padx=10, pady=5, sticky="w")
+tk.Label(window, text="Score").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+
+name_entry = tk.Entry(window, width=30)
+score_entry = tk.Entry(window, width=30)
+
+name_entry.grid(row=0, column=1, pady=5)
+score_entry.grid(row=1, column=1, pady=5)
+
+tk.Button(window, text="Submit", command=save_to_excel, width=20, bg="#61AD4E", fg="white").grid(row=3, column=0, columnspan=2, pady=10)
+tk.Button(window, text="View Stored Data", command=show_data, width=20, bg="#226710", fg="white").grid(row=4, column=0, columnspan=2)
+
+window.mainloop()
